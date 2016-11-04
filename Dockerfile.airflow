@@ -1,0 +1,19 @@
+FROM python:2.7
+
+ENV AIRFLOW_HOME /usr/local/airflow
+
+RUN \
+      addgroup --system airflow \
+      && adduser --disabled-password --system --group \
+                 --home ${AIRFLOW_HOME} --shell /usr/sbin/nologin \
+                 airflow
+
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+USER airflow
+WORKDIR ${AIRFLOW_HOME}
+
+COPY usr/local/airflow/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+
+ENTRYPOINT ["airflow"]

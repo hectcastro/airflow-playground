@@ -1,0 +1,96 @@
+version: '2'
+services:
+  database:
+    image: postgres:9.5
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+    extra_hosts:
+      - database.service.airflow.internal:127.0.0.1
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+
+  cache:
+    image: redis:3.2-alpine
+
+  airflow-web-server:
+    image: airflow
+    volumes:
+      - ./usr/local/airflow:/usr/local/airflow
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    links:
+      - database:database.service.airflow.internal
+      - cache:cache.service.airflow.internal
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - AIRFLOW_FERNET_KEY=secret
+      - AIRFLOW_WEB_SERVER_SECRET_KEY=secret
+    ports:
+      - "8080:8080"
+    restart: on-failure:5
+    command: webserver
+
+  airflow-flower:
+    image: airflow
+    volumes:
+      - ./usr/local/airflow:/usr/local/airflow
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    links:
+      - database:database.service.airflow.internal
+      - cache:cache.service.airflow.internal
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - AIRFLOW_FERNET_KEY=secret
+      - AIRFLOW_WEB_SERVER_SECRET_KEY=secret
+    ports:
+      - "5555:5555"
+    restart: on-failure:5
+    command: flower
+
+  airflow-scheduler:
+    image: airflow
+    volumes:
+      - ./usr/local/airflow:/usr/local/airflow
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    links:
+      - database:database.service.airflow.internal
+      - cache:cache.service.airflow.internal
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - AIRFLOW_FERNET_KEY=secret
+      - AIRFLOW_WEB_SERVER_SECRET_KEY=secret
+    restart: on-failure:5
+    command: scheduler
+
+  airflow-worker:
+    image: airflow
+    volumes:
+      - ./usr/local/airflow:/usr/local/airflow
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    links:
+      - database:database.service.airflow.internal
+      - cache:cache.service.airflow.internal
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - AIRFLOW_FERNET_KEY=secret
+      - AIRFLOW_WEB_SERVER_SECRET_KEY=secret
+    restart: on-failure:5
+    command: worker

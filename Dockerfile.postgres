@@ -1,0 +1,22 @@
+FROM postgres:9.5
+
+ENV AIRFLOW_HOME /usr/local/airflow
+ENV PYTHON_PIP_VERSION 8.1.2
+
+RUN \
+      apt-get update && apt-get install -y \
+              build-essential \
+              libpq-dev \
+              python-dev \
+              wget \
+      && wget -qO /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
+      && python2 /tmp/get-pip.py "pip==$PYTHON_PIP_VERSION" \
+      && rm -rf /tmp/get-pip.py /var/lib/apt/lists/*
+
+COPY requirements.txt /tmp/
+RUN \
+      pip install --no-cache-dir \
+          airflow[celery,postgres]==$(grep "airflow" /tmp/requirements.txt | cut -d= -f3)
+
+COPY usr/local/airflow/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY docker-entrypoint-initdb.d/airflow-initdb.sh /docker-entrypoint-initdb.d/airflow-initdb.sh

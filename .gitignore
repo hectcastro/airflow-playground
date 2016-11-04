@@ -1,0 +1,5 @@
+*.pid
+*.pyc
+unittests.cfg
+
+usr/local/airflow/logs
